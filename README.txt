@@ -8,3 +8,6 @@ Requirements:
 
 Optional, you can comment this code out:
 - pip install librosa
+
+References:
+- https://github.com/craffel/pretty-midi

@@ -19,10 +19,10 @@ if librosa is not None:
                                  hop_length=1, sr=fs, x_axis='time', y_axis='cqt_note',
                                  fmin=pm.note_number_to_hz(start_pitch))
 
-def process_song(filename, time_window = 0.4, max_semitones_allowed = 800):
+def process_song(filename, max_semitones_allowed=800, time_window=None):
     '''
     :param filename: Name of the file or path to it, including the name of the file with extension. Ex: Fur Elise.mid
-    :param time_window: Time window in seconds (can be float) to sample the song
+    :param time_window: Time window in seconds (can be float) to sample the song. If this is None (default), then it calculates a time window of exactly one bar, depending on tempo.
     :param max_semitones_allowed: Max number of semitones (notes) extracted from all the combined tracks of the song
     :return: List of lists with length of 88. They are all 0 except some that have 1 at the index if that note is
     'on' inside the time window.
@@ -31,6 +31,19 @@ def process_song(filename, time_window = 0.4, max_semitones_allowed = 800):
     midi_data = pm.PrettyMIDI(filename)
     # midi_data = pm.PrettyMIDI('Moonlight Sonata.mid')
     midi_data.remove_invalid_notes()
+    
+    # Print an empirical estimate of its global tempo. This might be wrong if the file is not properly formatted, but it works for most.
+    estimated_tempo = midi_data.estimate_tempo()
+    # This if should never be true since songs don't really go below 60 or above 180
+    # 40 and 250 are just arbitrary numbers
+    if estimated_tempo < 40:
+        estimated_tempo = 80
+        print("Tempo is probably wrong, setting it higher now...")
+    elif estimated_tempo > 280:
+        estimated_tempo = 180
+        print("Tempo is probably wrong, setting it lower now...")
+    
+    print("Estimated tempo:", estimated_tempo)
 
     # Get the first 800 semitones of our melody track and delete all the others
     max_semitones = max_semitones_allowed
@@ -85,7 +98,15 @@ def process_song(filename, time_window = 0.4, max_semitones_allowed = 800):
     # print(pm.note_name_to_number("A0"))
     # print(pm.note_name_to_number("C8"))
 
-    tw = time_window
+    # https://music.stackexchange.com/questions/24140/how-can-i-find-the-length-in-seconds-of-a-quarter-note-crotchet-if-i-have-a-te
+    if time_window is None:
+        # We could multiply our tw by 0.25 if we wanted it to have a quarter note resolution
+        tw = 60/estimated_tempo
+    else:
+        tw = time_window
+
+    print("Time Window:", tw)
+    
     latest_end = math.ceil(max(new_midi.instruments[0].notes, key=operator.attrgetter('end')).end)
     # print("="*20)
     all_samples = []
@@ -122,9 +143,9 @@ if __name__ == "__main__":
     all_songs = []
     for file in tqdm(glob.glob(os.path.join(path, "*.mid"))[:max_files_to_process]):
         str_name = os.path.basename(os.path.normpath(file))
-        print("Processing {}".format(str_name))
+        print("\nProcessing {}".format(str_name))
         song_samples = process_song(file)
         all_songs.append(song_samples)
-        print("_"*30)
+        print("="*30)
 
     print("Done with one folder!")
