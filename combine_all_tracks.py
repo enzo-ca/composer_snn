@@ -19,11 +19,12 @@ if librosa is not None:
                                  hop_length=1, sr=fs, x_axis='time', y_axis='cqt_note',
                                  fmin=pm.note_number_to_hz(start_pitch))
 
-def process_song(filename, max_semitones_allowed=800, time_window=None):
+def process_song(filename, max_semitones_allowed=800, spike_frequency=1, time_window=None):
     '''
     :param filename: Name of the file or path to it, including the name of the file with extension. Ex: Fur Elise.mid
     :param time_window: Time window in seconds (can be float) to sample the song. If this is None (default), then it calculates a time window of exactly one bar, depending on tempo.
     :param max_semitones_allowed: Max number of semitones (notes) extracted from all the combined tracks of the song
+    :param spike_frequency: How many repeats of the the same sample (one note) we want
     :return: List of lists with length of 88. They are all 0 except some that have 1 at the index if that note is
     'on' inside the time window.
     '''
@@ -99,35 +100,43 @@ def process_song(filename, max_semitones_allowed=800, time_window=None):
     # print(pm.note_name_to_number("C8"))
 
     # https://music.stackexchange.com/questions/24140/how-can-i-find-the-length-in-seconds-of-a-quarter-note-crotchet-if-i-have-a-te
-    if time_window is None:
-        # We could multiply our tw by 0.25 if we wanted it to have a quarter note resolution
-        tw = 60/estimated_tempo
-    else:
-        tw = time_window
+    # if time_window is None:
+    #     # We could multiply our tw by 0.25 if we wanted it to have a quarter note resolution
+    #     tw = 60/estimated_tempo
+    # else:
+    #     tw = time_window
+    #
+    # print("Time Window:", tw)
+    #
+    # latest_end = math.ceil(max(new_midi.instruments[0].notes, key=operator.attrgetter('end')).end)
+    # # print("="*20)
+    # all_samples = []
+    # new_start = 0
+    # for i in range(int((latest_end // tw)) + 1):
+    #     sample_tw = [0 for i in range(88)]
+    #     counter = 0
+    #     if (tw * i) > new_midi.instruments[0].notes[-1].end:
+    #         # Our time window is past our last note so we can end
+    #         break
+    #     for note in new_midi.instruments[0].notes[new_start:]:
+    #         counter += 1
+    #         if (tw * i <= note.start < tw * (i + 1)) \
+    #                 or (tw * i <= note.end < tw * (i + 1)):
+    #             # Make our array start with pitches at 0
+    #             sample_tw[note.pitch - min_piano_note] = 1
+    #         else:
+    #             # Since notes are in order, as soon as we find one not inside the time window, we can break
+    #             new_start = new_start + (counter - 1)
+    #             break
+    #     if (sample_tw not in all_samples) or (sum(sample_tw) != 0):
+    #         all_samples.append(sample_tw)
 
-    print("Time Window:", tw)
-    
-    latest_end = math.ceil(max(new_midi.instruments[0].notes, key=operator.attrgetter('end')).end)
-    # print("="*20)
     all_samples = []
-    new_start = 0
-    for i in range(int((latest_end // tw)) + 1):
+    spike_freq = spike_frequency
+    for note in new_midi.instruments[0].notes:
         sample_tw = [0 for i in range(88)]
-        counter = 0
-        if (tw * i) > new_midi.instruments[0].notes[-1].end:
-            # Our time window is past our last note so we can end
-            break
-        for note in new_midi.instruments[0].notes[new_start:]:
-            counter += 1
-            if (tw * i <= note.start < tw * (i + 1)) \
-                    or (tw * i <= note.end < tw * (i + 1)):
-                # Make our array start with pitches at 0
-                sample_tw[note.pitch - min_piano_note] = 1
-            else:
-                # Since notes are in order, as soon as we find one not inside the time window, we can break
-                new_start = new_start + (counter - 1)
-                break
-        if (sample_tw not in all_samples) or (sum(sample_tw) != 0):
+        sample_tw[note.pitch - min_piano_note] = 1
+        for i in range(spike_freq):
             all_samples.append(sample_tw)
 
     # See what we stored
