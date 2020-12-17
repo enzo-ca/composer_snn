@@ -84,52 +84,10 @@ def process_song(filename, max_semitones_allowed=800, spike_frequency=1, time_wi
     new_midi.instruments.append(piano)
     print("How many instruments (should be 1)?", len(new_midi.instruments))
 
-    # See what we have in our single track
-    # for note in new_midi.instruments[0].notes:
-    #     # print("{note}: {start}->{end}".format(note=pm.note_number_to_name(note.pitch),
-    #     #                                       start=midi_data.time_to_tick(note.start),
-    #     #                                       end=midi_data.time_to_tick(note.end)))
-    #     print(note)
-
-    # Write out the MIDI data to a new file
-    # new_midi.write('new_midi.mid')
-
     # Piano range of notes = 21-108
     min_piano_note = 21
     # print(pm.note_name_to_number("A0"))
     # print(pm.note_name_to_number("C8"))
-
-    # https://music.stackexchange.com/questions/24140/how-can-i-find-the-length-in-seconds-of-a-quarter-note-crotchet-if-i-have-a-te
-    # if time_window is None:
-    #     # We could multiply our tw by 0.25 if we wanted it to have a quarter note resolution
-    #     tw = 60/estimated_tempo
-    # else:
-    #     tw = time_window
-    #
-    # print("Time Window:", tw)
-    #
-    # latest_end = math.ceil(max(new_midi.instruments[0].notes, key=operator.attrgetter('end')).end)
-    # # print("="*20)
-    # all_samples = []
-    # new_start = 0
-    # for i in range(int((latest_end // tw)) + 1):
-    #     sample_tw = [0 for i in range(88)]
-    #     counter = 0
-    #     if (tw * i) > new_midi.instruments[0].notes[-1].end:
-    #         # Our time window is past our last note so we can end
-    #         break
-    #     for note in new_midi.instruments[0].notes[new_start:]:
-    #         counter += 1
-    #         if (tw * i <= note.start < tw * (i + 1)) \
-    #                 or (tw * i <= note.end < tw * (i + 1)):
-    #             # Make our array start with pitches at 0
-    #             sample_tw[note.pitch - min_piano_note] = 1
-    #         else:
-    #             # Since notes are in order, as soon as we find one not inside the time window, we can break
-    #             new_start = new_start + (counter - 1)
-    #             break
-    #     if (sample_tw not in all_samples) or (sum(sample_tw) != 0):
-    #         all_samples.append(sample_tw)
 
     all_samples = []
     spike_freq = spike_frequency
